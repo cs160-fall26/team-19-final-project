@@ -6,7 +6,7 @@ import { ReferencesProvider } from "@/components/references-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Spar — Design Reference Capture",
+  title: "World Material Library — Design Reference Capture",
   description:
     "Capture design references, extract elements, and copy generative prompts.",
 };

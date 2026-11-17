@@ -142,7 +142,7 @@ export function UploadDialog() {
             <DialogDescription className="font-mono text-xs text-black/55">
               {draft
                 ? "Drag on the photo to draw a box around what you want extracted. Drag the box to move it, or a corner to resize it."
-                : "Upload a photo, box the element you want, and Spar reads the file’s metadata and location and writes a description and prompt for it."}
+                : "Upload a photo, box the element you want, and World Material Library reads the file’s metadata and location and writes a description and prompt for it."}
             </DialogDescription>
           </DialogHeader>
 

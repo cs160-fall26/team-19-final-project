@@ -101,7 +101,7 @@ export async function POST(request: Request) {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        "X-Title": "Spar",
+        "X-Title": "World Material Library",
       },
       body: JSON.stringify({
         model,

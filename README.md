@@ -1,6 +1,6 @@
-# Spar — Design Reference Capture
+# World Material Library — Design Reference Capture
 
-Spar is a minimal design-reference library. Upload or browse photos, inspect an extracted region, read auto labels and a semantic write-up, open a map of where it was captured, and **Copy Prompt** for any generative AI tool.
+World Material Library is a minimal design-reference library. Upload or browse photos, inspect an extracted region, read auto labels and a semantic write-up, open a map of where it was captured, and **Copy Prompt** for any generative AI tool.
 
 ## Features
 

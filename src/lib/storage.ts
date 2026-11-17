@@ -2,6 +2,8 @@ import type { DesignReference } from "@/lib/types";
 
 // IndexedDB rather than localStorage: a handful of real photos exceeds the
 // ~5 MB localStorage quota.
+// Keeps the app's former name: renaming the database would orphan every
+// reference already saved in a user's browser.
 const DB_NAME = "spar";
 const DB_VERSION = 1;
 const STORE = "references";

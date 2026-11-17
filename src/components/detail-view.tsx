@@ -110,9 +110,9 @@ export function DetailView({ id }: { id: string }) {
       <header className="grid grid-cols-3 items-center border-b border-black/8 px-4 py-4 md:px-8">
         <Link
           href="/"
-          className="font-[family-name:var(--font-geist-pixel-square)] text-lg tracking-tight text-black transition-opacity hover:opacity-70"
+          className="font-[family-name:var(--font-geist-pixel-square)] text-sm leading-tight tracking-tight text-black transition-opacity hover:opacity-70 md:text-lg"
         >
-          spar
+          world material library
         </Link>
         <p className="text-center font-mono text-[10px] tracking-wide text-black/50">
           Reference
@@ -129,7 +129,7 @@ export function DetailView({ id }: { id: string }) {
 
       <div className="mx-auto grid w-full max-w-[1400px] flex-1 lg:grid-cols-2">
         <aside className="flex flex-col gap-8 px-5 py-8 md:px-10 md:py-12">
-          <div className="space-y-2 animate-[spar-rise_0.45s_ease_both]">
+          <div className="space-y-2 animate-[wml-rise_0.45s_ease_both]">
             <h1 className="max-w-md text-2xl leading-tight font-medium tracking-tight md:text-3xl">
               {ref.title}
             </h1>
@@ -140,7 +140,7 @@ export function DetailView({ id }: { id: string }) {
             </p>
           </div>
 
-          <section className="space-y-3 animate-[spar-rise_0.55s_ease_both]">
+          <section className="space-y-3 animate-[wml-rise_0.55s_ease_both]">
             <h2 className="font-mono text-[10px] tracking-[0.14em] text-black/45 uppercase">
               Semantic
             </h2>
@@ -217,7 +217,7 @@ export function DetailView({ id }: { id: string }) {
             </CollapsibleContent>
           </Collapsible>
 
-          <div className="mt-auto flex flex-wrap items-center gap-3 pt-4 animate-[spar-rise_0.65s_ease_both]">
+          <div className="mt-auto flex flex-wrap items-center gap-3 pt-4 animate-[wml-rise_0.65s_ease_both]">
             <LimeCta onClick={() => void copyPrompt()}>
               {copied ? "Copied" : "Copy Prompt"}
             </LimeCta>
@@ -231,7 +231,7 @@ export function DetailView({ id }: { id: string }) {
         </aside>
 
         <section className="flex items-center justify-center bg-[#ececec] px-4 py-10 md:px-10 md:py-14">
-          <div className="relative w-full max-w-xl overflow-hidden bg-[#e4e4e4] shadow-none animate-[spar-fade_0.6s_ease_both]">
+          <div className="relative w-full max-w-xl overflow-hidden bg-[#e4e4e4] shadow-none animate-[wml-fade_0.6s_ease_both]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={ref.imageUrl}
