@@ -61,8 +61,14 @@ function metadataRows(ref: DesignReference): [string, string][] {
 }
 
 export function DetailView({ id }: { id: string }) {
-  const { getById, ready } = useReferences();
+  const { getById, ready, references } = useReferences();
   const ref = getById(id);
+  // Other boxes extracted from the same upload, in the order they were drawn.
+  const siblings = ref?.photoId
+    ? references
+        .filter((r) => r.photoId === ref.photoId && r.id !== ref.id)
+        .sort((a, b) => b.addedAt.localeCompare(a.addedAt))
+    : [];
   const [metaOpen, setMetaOpen] = useState(false);
   const [mapOpen, setMapOpen] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -140,6 +146,17 @@ export function DetailView({ id }: { id: string }) {
             </p>
           </div>
 
+          {ref.note ? (
+            <section className="space-y-3 animate-[wml-rise_0.5s_ease_both]">
+              <h2 className="font-mono text-[10px] tracking-[0.14em] text-black/45 uppercase">
+                Your note
+              </h2>
+              <p className="max-w-prose border-l-2 border-[#CCFF00] pl-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap text-black/75">
+                {ref.note}
+              </p>
+            </section>
+          ) : null}
+
           <section className="space-y-3 animate-[wml-rise_0.55s_ease_both]">
             <h2 className="font-mono text-[10px] tracking-[0.14em] text-black/45 uppercase">
               Semantic
@@ -148,6 +165,41 @@ export function DetailView({ id }: { id: string }) {
               {ref.semantic}
             </p>
           </section>
+
+          {siblings.length > 0 ? (
+            <section className="space-y-3">
+              <h2 className="font-mono text-[10px] tracking-[0.14em] text-black/45 uppercase">
+                Also from this photo
+              </h2>
+              <ul className="grid gap-2">
+                {siblings.map((s) => (
+                  <li key={s.id}>
+                    <Link
+                      href={`/r/${s.id}`}
+                      className="group flex items-center gap-3 outline-none focus-visible:ring-2 focus-visible:ring-black"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={s.thumbnailUrl ?? s.imageUrl}
+                        alt=""
+                        className="size-10 shrink-0 bg-[#e8e8e8] object-cover"
+                      />
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm group-hover:underline group-hover:underline-offset-4">
+                          {s.title}
+                        </span>
+                        {s.note ? (
+                          <span className="block truncate font-mono text-[10px] text-black/45">
+                            {s.note}
+                          </span>
+                        ) : null}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
 
           <Collapsible open={metaOpen} onOpenChange={setMetaOpen}>
             <CollapsibleTrigger className="flex w-full items-center justify-between border-y border-black py-3 text-left">

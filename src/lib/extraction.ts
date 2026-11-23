@@ -15,6 +15,8 @@ export type ExtractionRequest = {
   /** The boxed region on its own, as a data URL. */
   crop: string;
   box: BoundingBox;
+  /** The designer's optional note on what they want from the box. */
+  note?: string;
 };
 
 /**

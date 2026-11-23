@@ -50,7 +50,7 @@ export function LibraryView() {
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={ref.imageUrl}
+                    src={ref.thumbnailUrl ?? ref.imageUrl}
                     alt={ref.title}
                     className="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
                   />
