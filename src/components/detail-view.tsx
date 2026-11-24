@@ -308,7 +308,7 @@ export function DetailView({
         </section>
       </div>
 
-      <StudySection key={ref.id} id={ref.id} part={part} />
+      <StudySection key={ref.id} id={ref.id} part={part} note={ref.note} />
     </div>
   );
 }

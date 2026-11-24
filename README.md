@@ -58,7 +58,7 @@ Changing the embedding model re-embeds the library on the next search. What coun
 
 A light analysis is what the vision model writes in a few seconds. A deep analysis adds a study by a Codex session: it picks out what is unusual and reusable in the image and saves each part with a picture, an editable file and search words. `skills/study/SKILL.md` is what the agent is told to do.
 
-Choose **Deep** in the upload dialog, or press **Run deep analysis** on a reference's page. You can add a note saying what you like about the image; the agent treats it as the strongest hint about what to extract. The page shows the run while it works and the parts when it has finished. A run takes about three to ten minutes and keeps going if you close the page.
+Choose **Deep** in the upload dialog, or press **Run deep analysis** on a reference's page. A box's note says what you want from it, and the agent treats it as the strongest hint about what to extract. When an upload has several boxes, Deep runs for the box drawn last; the others can be run from their own pages. The page shows the run while it works and the parts when it has finished. A run takes about three to ten minutes and keeps going if you close the page.
 
 It needs two things on the computer World Material Library runs on:
 
@@ -105,7 +105,8 @@ data/
   references/
     upload-1763500000000/
       image.jpg        the photo as the app keeps it (longest edge 1600 px)
-      reference.json   title, labels, description, prompt, box, location, metadata
+      thumbnail.jpg    the boxed region on its own, shown in the grid
+      reference.json   title, labels, description, prompt, box, note, location, metadata
       embedding.json   what search uses to find related references; safe to delete, it is rebuilt
       study.json       after a deep analysis: the parts the agent chose, and why
       parts/           after a deep analysis: each part's pictures (.png), its editable file (.svg or .html) and, for some, the function that draws it (.js)

@@ -226,7 +226,7 @@ function PlaceMarker({ place }: { place: Place }) {
   // What the marker draws, as text, so the icon is rebuilt only when it changes.
   const shown = members
     .slice(0, MAX_BUBBLES)
-    .map(({ ref, related }) => `${related ? "~" : ""}${ref.imageUrl}`)
+    .map(({ ref, related }) => `${related ? "~" : ""}${ref.thumbnailUrl ?? ref.imageUrl}`)
     .join("\n");
   const icon = useMemo(
     () =>
@@ -272,7 +272,7 @@ function PlaceMarker({ place }: { place: Place }) {
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={ref.imageUrl}
+                    src={ref.thumbnailUrl ?? ref.imageUrl}
                     alt=""
                     className="size-12 shrink-0 bg-[#e4e4e4] object-cover"
                   />

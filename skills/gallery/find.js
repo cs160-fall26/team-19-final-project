@@ -109,6 +109,8 @@ function loadLibrary(dataDir) {
       title: asText(stored.title, 200) || id,
       labels: asTexts(stored.labels, 24, 80),
       description: asText(stored.semantic, 2000),
+      // What the owner said they wanted from the boxed region, when they left a note.
+      note: asText(stored.note, 2000) || null,
       format: "image",
       addedAt: asText(stored.addedAt, 40),
       folder,
@@ -206,7 +208,7 @@ function fieldsOf(item) {
   return [
     [10, item.labels.join(" ")],
     [6, item.title],
-    [3, item.description],
+    [3, `${item.description} ${item.note ?? ""}`],
   ];
 }
 
@@ -313,6 +315,7 @@ function describe(found) {
       lines.push(`${index + 1}. REFERENCE  ${result.title}  [image]`);
       lines.push(`   id: ${result.id}   labels: ${result.labels.join(", ")}`);
       if (result.description) lines.push(`   ${result.description}`);
+      if (result.note) lines.push(`   the owner's note: ${result.note}`);
       if (result.picture) lines.push(`   picture: ${result.picture}`);
       lines.push(result.parts > 0 ? `   parts taken from it: ${result.parts} (search with --in parts to see them)` : "   no parts have been taken from it yet");
     }

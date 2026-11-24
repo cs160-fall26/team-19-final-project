@@ -12,6 +12,7 @@ import type { DesignReference, GeoPoint } from "@/lib/types";
  *
  *   <data dir>/references/<id>/reference.json
  *   <data dir>/references/<id>/image.jpg
+ *   <data dir>/references/<id>/thumbnail.jpg    (the boxed region on its own, when the upload sent one)
  *   <data dir>/references/<id>/embedding.json   (written by search, see semantic-search.ts)
  *
  * The data dir is `data/` in the project root unless SPAR_DATA_DIR says otherwise.
@@ -19,8 +20,10 @@ import type { DesignReference, GeoPoint } from "@/lib/types";
 
 /** Same cap as /api/extract, so any photo that could be described can be stored. */
 const MAX_IMAGE_DATA_URL_LENGTH = 8_000_000;
-/** The photo plus generous room for the rest of the reference. */
-export const MAX_REFERENCE_BODY_BYTES = MAX_IMAGE_DATA_URL_LENGTH + 500_000;
+/** The photo and its thumbnail, plus generous room for the rest of the reference. */
+export const MAX_REFERENCE_BODY_BYTES = MAX_IMAGE_DATA_URL_LENGTH * 2 + 500_000;
+/** Well above what the upload dialog lets a designer type. */
+const MAX_NOTE_LENGTH = 2000;
 
 const RECORD_FILE = "reference.json";
 const EMBEDDING_FILE = "embedding.json";
@@ -30,14 +33,19 @@ const IMAGE_FILES = {
   "image/webp": "image.webp",
 } as const;
 type ImageType = keyof typeof IMAGE_FILES;
+const THUMBNAIL_FILES: Record<ImageType, string> = {
+  "image/jpeg": "thumbnail.jpg",
+  "image/png": "thumbnail.png",
+  "image/webp": "thumbnail.webp",
+};
 
 /** Ids become folder names, so nothing that could leave the references folder. */
 const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$/;
 const IMAGE_DATA_URL_PATTERN =
   /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/]+={0,2})$/;
 
-/** Everything in a reference except the photo, which is a file of its own. */
-type StoredReference = Omit<DesignReference, "imageUrl">;
+/** Everything in a reference except its pictures, which are files of their own. */
+type StoredReference = Omit<DesignReference, "imageUrl" | "thumbnailUrl">;
 
 /** The request described something that is not a storable reference. */
 export class InvalidReferenceError extends Error {}
@@ -70,6 +78,10 @@ export function referenceDir(id: string) {
 
 function imageUrlFor(id: string) {
   return `/api/references/${id}/image`;
+}
+
+function thumbnailUrlFor(id: string) {
+  return `/api/references/${id}/thumbnail`;
 }
 
 function hasCode(error: unknown, ...codes: string[]) {
@@ -145,6 +157,15 @@ function parseFields(value: unknown): StoredReference {
   }
   const box = object(input.boundingBox, "boundingBox");
   const metadata = object(input.metadata, "metadata");
+  const note = optionalText(input.note, "note")?.trim();
+  if (note && note.length > MAX_NOTE_LENGTH) {
+    invalid(`"note" is longer than ${MAX_NOTE_LENGTH} characters.`);
+  }
+  // Becomes part of no path, but it is an id like any other.
+  const photoId = optionalText(input.photoId, "photoId");
+  if (photoId !== undefined && !ID_PATTERN.test(photoId)) {
+    invalid(`"photoId" may only contain letters, digits, "-" and "_".`);
+  }
   return {
     id,
     title: text(input.title, "title"),
@@ -157,6 +178,8 @@ function parseFields(value: unknown): StoredReference {
       width: within(box.width, "boundingBox.width", 0, 1),
       height: within(box.height, "boundingBox.height", 0, 1),
     },
+    ...(note ? { note } : {}),
+    ...(photoId ? { photoId } : {}),
     location: geoPoint(input.location),
     capturedAt:
       input.capturedAt === undefined || input.capturedAt === null
@@ -195,6 +218,36 @@ function parseImage(value: unknown): { file: string; bytes: Buffer } {
   };
 }
 
+/**
+ * The thumbnail a new reference brings, or null when it brings none. Only a
+ * data URL is a picture to store; anything else, such as the address of a
+ * thumbnail that is already stored, is passed over.
+ */
+function parseThumbnail(value: unknown): { file: string; bytes: Buffer } | null {
+  if (typeof value !== "string" || !value.startsWith("data:")) return null;
+  if (value.length > MAX_IMAGE_DATA_URL_LENGTH) invalid("The thumbnail is too large.");
+  const match = IMAGE_DATA_URL_PATTERN.exec(value);
+  if (!match) invalid(`"thumbnailUrl" must be a JPEG, PNG or WEBP data URL.`);
+  return {
+    file: THUMBNAIL_FILES[match[1] as ImageType],
+    bytes: Buffer.from(match[2], "base64"),
+  };
+}
+
+/** The reference's thumbnail file, or null when it was stored without one. */
+async function thumbnailPath(id: string): Promise<string | null> {
+  for (const file of Object.values(THUMBNAIL_FILES)) {
+    const candidate = path.join(referenceDir(id), file);
+    try {
+      await fs.access(candidate);
+      return candidate;
+    } catch (error) {
+      if (!hasCode(error, "ENOENT", "ENOTDIR")) throw error;
+    }
+  }
+  return null;
+}
+
 /** Null when the folder holds no readable reference. */
 async function readReference(id: string): Promise<DesignReference | null> {
   let raw: string;
@@ -207,7 +260,11 @@ async function readReference(id: string): Promise<DesignReference | null> {
   try {
     // The folder name is what the URLs are built from, so it is the id.
     const fields = parseFields({ ...object(JSON.parse(raw), "reference"), id });
-    return { ...fields, imageUrl: imageUrlFor(id) };
+    return {
+      ...fields,
+      imageUrl: imageUrlFor(id),
+      ...((await thumbnailPath(id)) ? { thumbnailUrl: thumbnailUrlFor(id) } : {}),
+    };
   } catch (error) {
     // One damaged file should not take the rest of the library down with it.
     console.warn(
@@ -263,6 +320,7 @@ export async function createReference(
 ): Promise<{ reference: DesignReference; created: boolean }> {
   const fields = parseFields(input);
   const image = parseImage(object(input, "reference").imageUrl);
+  const thumbnail = parseThumbnail(object(input, "reference").thumbnailUrl);
 
   const existing = await readReference(fields.id);
   if (existing) return { reference: existing, created: false };
@@ -276,6 +334,9 @@ export async function createReference(
   await fs.mkdir(staging, { recursive: true });
   try {
     await writeFlushed(path.join(staging, image.file), image.bytes);
+    if (thumbnail) {
+      await writeFlushed(path.join(staging, thumbnail.file), thumbnail.bytes);
+    }
     await writeFlushed(
       path.join(staging, RECORD_FILE),
       `${JSON.stringify(fields, null, 2)}\n`,
@@ -289,7 +350,11 @@ export async function createReference(
     throw error;
   }
   return {
-    reference: { ...fields, imageUrl: imageUrlFor(fields.id) },
+    reference: {
+      ...fields,
+      imageUrl: imageUrlFor(fields.id),
+      ...(thumbnail ? { thumbnailUrl: thumbnailUrlFor(fields.id) } : {}),
+    },
     created: true,
   };
 }
@@ -300,6 +365,22 @@ export async function readReferenceImage(
 ): Promise<{ bytes: Buffer; contentType: string } | null> {
   if (!ID_PATTERN.test(id)) return null;
   for (const [contentType, file] of Object.entries(IMAGE_FILES)) {
+    try {
+      const bytes = await fs.readFile(path.join(referenceDir(id), file));
+      return { bytes, contentType };
+    } catch (error) {
+      if (!hasCode(error, "ENOENT", "ENOTDIR")) throw error;
+    }
+  }
+  return null;
+}
+
+/** The stored thumbnail, or null when the reference has none. */
+export async function readReferenceThumbnail(
+  id: string,
+): Promise<{ bytes: Buffer; contentType: string } | null> {
+  if (!ID_PATTERN.test(id)) return null;
+  for (const [contentType, file] of Object.entries(THUMBNAIL_FILES)) {
     try {
       const bytes = await fs.readFile(path.join(referenceDir(id), file));
       return { bytes, contentType };

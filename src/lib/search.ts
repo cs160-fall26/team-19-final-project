@@ -4,7 +4,8 @@ import type { DesignReference } from "@/lib/types";
  * Keyword search over the library, run in the browser on every keystroke.
  *
  * Every word of the query has to match the reference somewhere. A match in a
- * label counts most, then the title, then the description and prompt. A word
+ * label counts most, then the title, then the description, the prompt and the
+ * designer's note. A word
  * matches when it equals a word of the reference (plurals aside) or begins
  * one. A word that matches nothing anywhere in the library is treated as a
  * typo and compared loosely against the labels and titles instead.
@@ -16,7 +17,7 @@ import type { DesignReference } from "@/lib/types";
 /** What the search reads of a thing. A reference has all of it. */
 export type Searchable = Pick<
   DesignReference,
-  "title" | "labels" | "semantic" | "prompt" | "addedAt"
+  "title" | "labels" | "semantic" | "prompt" | "addedAt" | "note"
 >;
 
 type Field = "label" | "title" | "text";
@@ -121,6 +122,7 @@ function entryFor(ref: Searchable): Entry {
   addWords(entry.words.title, ref.title);
   addWords(entry.words.text, ref.semantic);
   addWords(entry.words.text, ref.prompt);
+  if (ref.note) addWords(entry.words.text, ref.note);
   entries.set(ref, entry);
   return entry;
 }

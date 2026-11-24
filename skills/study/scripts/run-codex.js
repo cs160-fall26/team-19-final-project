@@ -238,6 +238,10 @@ async function main() {
       throw new StudyError("Codex is not logged in. Run `codex login` in a terminal, then start the deep analysis again.");
     }
 
+    // With no note given for this run, the one saved with the reference is the hint.
+    const hint = (typeof note === "string" && note.trim()) || (typeof stored.note === "string" && stored.note.trim()) || null;
+    if (hint !== note) record({ note: hint });
+
     fs.rmSync(work, { recursive: true, force: true });
     fs.mkdirSync(temporary, { recursive: true });
     fs.copyFileSync(path.join(reference, photo), path.join(work, photo));
@@ -267,7 +271,7 @@ async function main() {
       detached: true,
       stdio: ["pipe", fs.openSync(path.join(run, "final.txt"), "w"), fs.openSync(transcriptFile, "w")],
     });
-    codex.stdin.end(buildPrompt(reference, note));
+    codex.stdin.end(buildPrompt(reference, hint));
     const limit = setTimeout(() => {
       outcome = `Stopped at the ${MINUTES}-minute limit.`;
       interrupt();

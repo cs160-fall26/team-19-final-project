@@ -262,10 +262,13 @@ function PartDetail({
 export function StudySection({
   id,
   part: asked,
+  note: saved,
 }: {
   id: string;
   /** A part to show opened, when the page was reached from a search for parts. */
   part?: string;
+  /** The note saved with the reference. A run started without a note of its own uses it. */
+  note?: string;
 }) {
   const [state, setState] = useState<StudyState | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -463,6 +466,11 @@ export function StudySection({
                 >
                   Cancel
                 </button>
+              ) : null}
+              {saved && !note.trim() ? (
+                <p className="w-full font-mono text-[11px] text-black/45">
+                  Left empty, your note on this reference is the hint.
+                </p>
               ) : null}
               {study ? (
                 <p className="w-full font-mono text-[11px] text-black/45">

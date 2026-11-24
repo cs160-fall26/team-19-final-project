@@ -51,7 +51,7 @@ const ANALYSES: { value: Analysis; title: string; text: string }[] = [
   {
     value: "deep",
     title: "Deep",
-    text: "The same, then Codex extracts reusable parts as pictures and editable files, guided by the box's note. Several minutes.",
+    text: "The same, then Codex extracts reusable parts as pictures and editable files, guided by the box's note. Several minutes more.",
   },
 ];
 
@@ -342,42 +342,43 @@ export function UploadDialog() {
                 </div>
               </dl>
 
-              <fieldset className="grid gap-2" disabled={extracting}>
-                <legend className="mb-2 font-mono text-[10px] tracking-[0.14em] text-black/45 uppercase">
+              {/* One line and a sentence: the dialog is already tall with a photo and its notes. */}
+              <div
+                role="radiogroup"
+                aria-label="Analysis"
+                className="flex flex-wrap items-baseline gap-x-4 gap-y-1 font-mono text-[11px]"
+              >
+                <span className="text-[10px] tracking-[0.14em] text-black/45 uppercase">
                   Analysis
-                </legend>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {ANALYSES.map((option) => (
-                    <label
-                      key={option.value}
-                      className={`cursor-pointer border px-3 py-2 transition-colors has-focus-visible:ring-2 has-focus-visible:ring-black ${
-                        analysis === option.value
-                          ? "border-black bg-[#f6f6f6]"
-                          : "border-black/15 hover:border-black/40"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="analysis"
-                        value={option.value}
-                        checked={analysis === option.value}
-                        onChange={() => setAnalysis(option.value)}
-                        className="sr-only"
-                      />
-                      <span className="block text-sm font-medium">{option.title}</span>
-                      <span className="mt-0.5 block font-mono text-[10px] leading-4 text-black/55">
-                        {option.text}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-                {analysis === "deep" && boxes.length > 1 ? (
-                  <p className="font-mono text-[10px] leading-4 text-black/55">
-                    Codex studies the latest box only: box {boxes.length}. Its note
-                    tells Codex what you are after.
-                  </p>
-                ) : null}
-              </fieldset>
+                </span>
+                {ANALYSES.map((option) => (
+                  <label
+                    key={option.value}
+                    className={`cursor-pointer underline-offset-4 transition-colors has-focus-visible:underline has-disabled:cursor-default has-disabled:opacity-60 ${
+                      analysis === option.value
+                        ? "text-black underline"
+                        : "text-black/45 hover:text-black"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="analysis"
+                      value={option.value}
+                      checked={analysis === option.value}
+                      disabled={extracting}
+                      onChange={() => setAnalysis(option.value)}
+                      className="sr-only"
+                    />
+                    {option.title}
+                  </label>
+                ))}
+                <span className="basis-full text-[10px] leading-4 text-black/55">
+                  {ANALYSES.find((option) => option.value === analysis)?.text}
+                  {analysis === "deep" && boxes.length > 1 ? (
+                    <span> Codex studies the latest box only: box {boxes.length}.</span>
+                  ) : null}
+                </span>
+              </div>
 
               <div className="flex flex-wrap items-center gap-3">
                 <LimeCta
