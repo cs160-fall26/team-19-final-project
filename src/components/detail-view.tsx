@@ -12,12 +12,14 @@ import { LimeCta } from "@/components/lime-cta";
 import { BoundingBoxOverlay } from "@/components/bounding-box-overlay";
 import { LocationMap } from "@/components/location-map";
 import { useReferences } from "@/components/references-provider";
+import { StudySection } from "@/components/study-section";
 import {
   formatBytes,
   formatCapturedAt,
   formatCoordinates,
   formatDate,
 } from "@/lib/format";
+import { libraryHref } from "@/lib/library-url";
 import type { DesignReference } from "@/lib/types";
 
 /** Only rows the file or the model actually supplied. */
@@ -60,9 +62,18 @@ function metadataRows(ref: DesignReference): [string, string][] {
   return rows.filter((row): row is [string, string] => Boolean(row[1]));
 }
 
-export function DetailView({ id }: { id: string }) {
-  const { getById, ready } = useReferences();
+export function DetailView({
+  id,
+  part,
+}: {
+  id: string;
+  /** A part of the reference's study to show opened. */
+  part?: string;
+}) {
+  const { getById, ready, loadError } = useReferences();
   const ref = getById(id);
+  // The library as it was left: the same search, colour and view.
+  const backHref = libraryHref();
   const [metaOpen, setMetaOpen] = useState(false);
   const [mapOpen, setMapOpen] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -84,9 +95,11 @@ export function DetailView({ id }: { id: string }) {
   if (!ref) {
     return (
       <div className="flex min-h-full flex-1 flex-col items-center justify-center gap-4 bg-white px-6 text-center">
-        <p className="font-mono text-xs text-black/55">Reference not found.</p>
+        <p className="max-w-xl font-mono text-xs leading-relaxed text-black/55">
+          {loadError ?? "Reference not found."}
+        </p>
         <Link
-          href="/"
+          href={backHref}
           className="font-mono text-xs underline underline-offset-4"
         >
           ← Back to library
@@ -119,7 +132,7 @@ export function DetailView({ id }: { id: string }) {
         </p>
         <div className="justify-self-end">
           <Link
-            href="/"
+            href={backHref}
             className="font-mono text-[10px] tracking-wide text-black/70 underline-offset-4 hover:underline"
           >
             Library ←
@@ -222,7 +235,7 @@ export function DetailView({ id }: { id: string }) {
               {copied ? "Copied" : "Copy Prompt"}
             </LimeCta>
             <Link
-              href="/"
+              href={backHref}
               className="inline-flex h-10 items-center justify-center rounded-full border border-black bg-transparent px-5 text-sm font-medium transition-colors hover:bg-black hover:text-white"
             >
               Back to library
@@ -242,6 +255,8 @@ export function DetailView({ id }: { id: string }) {
           </div>
         </section>
       </div>
+
+      <StudySection key={ref.id} id={ref.id} part={part} />
     </div>
   );
 }

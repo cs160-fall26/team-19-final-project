@@ -13,6 +13,9 @@
 # testing
 /coverage
 
+# the reference library: photos (with their GPS positions) and descriptions
+/data/
+
 # next.js
 /.next/
 /out/

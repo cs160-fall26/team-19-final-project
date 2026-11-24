@@ -12,6 +12,7 @@ import {
 import { BoxSelector } from "@/components/box-selector";
 import { LimeCta } from "@/components/lime-cta";
 import { useReferences } from "@/components/references-provider";
+import { StudyNoteInput } from "@/components/study-section";
 import { requestExtraction } from "@/lib/extraction";
 import { formatCapturedAt, formatCoordinates } from "@/lib/format";
 import {
@@ -23,6 +24,7 @@ import {
   type PhotoFacts,
   type PreparedPhoto,
 } from "@/lib/photo";
+import { startStudy } from "@/lib/study";
 import type { BoundingBox, DesignReference } from "@/lib/types";
 
 type Draft = {
@@ -33,6 +35,22 @@ type Draft = {
 
 const WHOLE_PHOTO: BoundingBox = { x: 0, y: 0, width: 1, height: 1 };
 
+/** How much is worked out about a new reference. */
+type Analysis = "light" | "deep";
+
+const ANALYSES: { value: Analysis; title: string; text: string }[] = [
+  {
+    value: "light",
+    title: "Light",
+    text: "A title, labels, a description and a prompt. A few seconds.",
+  },
+  {
+    value: "deep",
+    title: "Deep",
+    text: "The same, then Codex extracts reusable parts as pictures and editable files. Several minutes.",
+  },
+];
+
 export function UploadDialog() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
@@ -40,6 +58,8 @@ export function UploadDialog() {
   const [box, setBox] = useState<BoundingBox | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<"reading" | "extracting" | null>(null);
+  const [analysis, setAnalysis] = useState<Analysis>("light");
+  const [note, setNote] = useState("");
   const { addReference } = useReferences();
   const router = useRouter();
 
@@ -48,6 +68,7 @@ export function UploadDialog() {
     setBox(null);
     setError(null);
     setBusy(null);
+    setNote("");
     if (inputRef.current) inputRef.current.value = "";
   }
 
@@ -107,6 +128,12 @@ export function UploadDialog() {
         model: extracted.model,
       };
       await addReference(ref);
+      if (analysis === "deep") {
+        // The reference is saved either way. If the run cannot start, the
+        // server records why, and the reference's page shows it and offers
+        // to start again.
+        await startStudy(ref.id, note.trim()).catch(() => undefined);
+      }
       setOpen(false);
       reset();
       router.push(`/r/${ref.id}`);
@@ -183,6 +210,40 @@ export function UploadDialog() {
                   </dd>
                 </div>
               </dl>
+
+              <fieldset className="grid gap-2" disabled={extracting}>
+                <legend className="mb-2 font-mono text-[10px] tracking-[0.14em] text-black/45 uppercase">
+                  Analysis
+                </legend>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {ANALYSES.map((option) => (
+                    <label
+                      key={option.value}
+                      className={`cursor-pointer border px-3 py-2 transition-colors has-focus-visible:ring-2 has-focus-visible:ring-black ${
+                        analysis === option.value
+                          ? "border-black bg-[#f6f6f6]"
+                          : "border-black/15 hover:border-black/40"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="analysis"
+                        value={option.value}
+                        checked={analysis === option.value}
+                        onChange={() => setAnalysis(option.value)}
+                        className="sr-only"
+                      />
+                      <span className="block text-sm font-medium">{option.title}</span>
+                      <span className="mt-0.5 block font-mono text-[10px] leading-4 text-black/55">
+                        {option.text}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                {analysis === "deep" ? (
+                  <StudyNoteInput value={note} onChange={setNote} disabled={extracting} />
+                ) : null}
+              </fieldset>
 
               <div className="flex flex-wrap items-center gap-3">
                 <LimeCta

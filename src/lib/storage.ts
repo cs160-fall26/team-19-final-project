@@ -1,50 +1,54 @@
 import type { DesignReference } from "@/lib/types";
 
-// IndexedDB rather than localStorage: a handful of real photos exceeds the
-// ~5 MB localStorage quota.
-const DB_NAME = "spar";
-const DB_VERSION = 1;
-const STORE = "references";
+// The library lives on disk, behind the server's /api/references routes
+// (src/lib/reference-store.ts), so it does not depend on this browser.
 
-function openDb(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = window.indexedDB.open(DB_NAME, DB_VERSION);
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains(STORE)) {
-        db.createObjectStore(STORE, { keyPath: "id" });
-      }
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
+/** Calls a Spar route and returns its JSON, or throws with a sentence for the user. */
+export async function call<T>(
+  failure: string,
+  input: string,
+  init?: RequestInit,
+): Promise<T> {
+  let response: Response;
+  try {
+    response = await fetch(input, init);
+  } catch {
+    throw new Error(`${failure}: the Spar server did not answer.`);
+  }
+  const body = (await response.json().catch(() => null)) as
+    | (T & { error?: string })
+    | null;
+  if (!response.ok || !body || body.error) {
+    throw new Error(body?.error ?? `${failure} (HTTP ${response.status}).`);
+  }
+  return body;
 }
 
+/** The stored library, newest first. */
 export async function loadReferences(): Promise<DesignReference[]> {
-  const db = await openDb();
-  try {
-    const refs = await new Promise<DesignReference[]>((resolve, reject) => {
-      const request = db.transaction(STORE, "readonly").objectStore(STORE).getAll();
-      request.onsuccess = () => resolve(request.result as DesignReference[]);
-      request.onerror = () => reject(request.error);
-    });
-    return refs.sort((a, b) => b.addedAt.localeCompare(a.addedAt));
-  } finally {
-    db.close();
-  }
+  const { references } = await call<{ references: DesignReference[] }>(
+    "Could not load the library",
+    "/api/references",
+    { cache: "no-store" },
+  );
+  return references;
 }
 
-export async function saveReference(ref: DesignReference): Promise<void> {
-  const db = await openDb();
-  try {
-    await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(STORE, "readwrite");
-      tx.objectStore(STORE).put(ref);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error);
-    });
-  } finally {
-    db.close();
-  }
+/**
+ * Stores a reference whose `imageUrl` is the photo as a data URL. The stored
+ * reference that comes back points at the photo's file instead.
+ */
+export async function saveReference(
+  ref: DesignReference,
+): Promise<DesignReference> {
+  const { reference } = await call<{ reference: DesignReference }>(
+    "Could not save the reference",
+    "/api/references",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(ref),
+    },
+  );
+  return reference;
 }
