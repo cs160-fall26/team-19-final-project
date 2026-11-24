@@ -29,7 +29,7 @@ async function fetchRelated(
     });
   } catch (cause) {
     if (signal.aborted) throw cause;
-    throw new Error("The Spar server did not answer.");
+    throw new Error("The World Material Library server did not answer.");
   }
   const body = (await response.json().catch(() => null)) as {
     results?: RelatedReference[];

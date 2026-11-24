@@ -1,6 +1,6 @@
 ---
 name: study
-description: Study a reference image from the Spar gallery. Pick out what is unusual and reusable in it, and save each part beside the reference as a picture, an editable file and words to find it by. Use when asked to study, extract from, or take apart a reference.
+description: Study a reference image from the World Material Library gallery. Pick out what is unusual and reusable in it, and save each part beside the reference as a picture, an editable file and words to find it by. Use when asked to study, extract from, or take apart a reference.
 ---
 
 # Study a reference

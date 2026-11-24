@@ -1,6 +1,6 @@
 ---
 name: gallery
-description: Find references and reusable parts in the owner's Spar gallery and use them in a design. Use when you design something for the owner of this gallery, before you invent a look of your own.
+description: Find references and reusable parts in the owner's World Material Library gallery and use them in a design. Use when you design something for the owner of this gallery, before you invent a look of your own.
 ---
 
 # Use the gallery
@@ -18,7 +18,7 @@ The owner of this gallery saves images they like. Some of them have been studied
 - **`--format svg,html,image`.** `svg` and `html` are parts with an editable file. `image` is a part that is only a picture, or a reference's photo.
 - **`--limit 10`**, **`--files`** to print the text of each part's files, **`--json`** for JSON.
 
-When the Spar app is running, `GET /api/library/search?q=…&in=…&format=…&limit=…&files=1` gives the same answer as `--json`.
+When the app is running, `GET /api/library/search?q=…&in=…&format=…&limit=…&files=1` gives the same answer as `--json`.
 
 ## What a result tells you
 

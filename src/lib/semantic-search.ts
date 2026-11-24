@@ -88,7 +88,7 @@ async function embed(texts: string[], model: string): Promise<Float32Array[]> {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        "X-Title": "Spar",
+        "X-Title": "World Material Library",
       },
       body: JSON.stringify({ model, input: texts }),
       signal: AbortSignal.timeout(30_000),
@@ -221,7 +221,7 @@ async function buildVectors(
         } catch (error) {
           // The vector still serves this process; it is embedded again after a restart.
           console.warn(
-            `Spar: could not store the embedding of ${item.id}: ${
+            `World Material Library: could not store the embedding of ${item.id}: ${
               error instanceof Error ? error.message : String(error)
             }`,
           );
@@ -335,7 +335,7 @@ export async function refreshIndex(): Promise<void> {
     await vectorsFor(await listReferences(), embeddingModel());
   } catch (error) {
     console.warn(
-      `Spar: could not update the search index: ${
+      `World Material Library: could not update the search index: ${
         error instanceof Error ? error.message : String(error)
       }`,
     );

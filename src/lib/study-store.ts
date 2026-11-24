@@ -372,7 +372,7 @@ export async function startStudy(id: string, note: string): Promise<StudyState> 
     const runner = path.resolve(...RUNNER);
     if (!(await readPlainFile(runner, MAX_SOURCE_BYTES))) {
       return refuse(
-        "Deep analysis is not set up: skills/study is missing from the folder Spar runs in.",
+        "Deep analysis is not set up: skills/study is missing from the folder World Material Library runs in.",
       );
     }
     if ((await runsInProgress()) >= MAX_RUNS_AT_ONCE) {

@@ -97,7 +97,7 @@ function LibraryFrame({
     <div className="relative flex min-h-full flex-1 flex-col bg-[#f4f4f4]">
       <header className="px-4 pt-10 pb-8 text-center md:px-8">
         <p className="font-mono text-[11px] leading-relaxed tracking-[0.02em] text-black/80 md:text-xs">
-          Spar — Design Reference Capture
+          World Material Library — Design Reference Capture
           <br />
           Photograph, lasso, label, and prompt any detail.
           <br />
@@ -113,15 +113,15 @@ function LibraryFrame({
           aria-hidden
           className="pointer-events-none absolute inset-x-0 bottom-8 z-0 flex justify-center overflow-hidden"
         >
-          <span className="select-none font-[family-name:var(--font-geist-pixel-square)] text-[18vw] leading-none tracking-tight text-black/[0.06] md:text-[12vw]">
-            spar
+          <span className="select-none font-[family-name:var(--font-geist-pixel-square)] text-[clamp(1rem,8.6vw,7.75rem)] leading-none tracking-tight whitespace-nowrap text-black/[0.06]">
+            world material library
           </span>
         </div>
       </main>
 
       <footer className="relative z-10 border-t border-black/5 px-4 py-6 md:px-8">
         <div className="mx-auto flex max-w-[1400px] flex-col gap-2 font-mono text-[10px] tracking-wide text-black/55 sm:flex-row sm:justify-between">
-          <span>Spar</span>
+          <span>World Material Library</span>
           <span>Capture · Extract · Prompt</span>
           <span>EXIF metadata · vision description</span>
           <span>© 2026</span>

@@ -3,10 +3,10 @@
 "use strict";
 
 /*
- * find.js: search the Spar gallery, for an agent that is designing something.
+ * find.js: search the World Material Library gallery, for an agent that is designing something.
  *
  * It reads the library straight from disk, so it works whether or not the
- * Spar app is running, and inside a sandbox that has no network. The app's
+ * app is running, and inside a sandbox that has no network. The app's
  * /api/library/search route answers with the same function.
  *
  * The gallery holds two kinds of things:
@@ -20,7 +20,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 
-const USAGE = `find.js: search the Spar gallery for references and reusable parts.
+const USAGE = `find.js: search the World Material Library gallery for references and reusable parts.
 
   node find.js [words ...] [--in parts|references|both] [--format svg,html,image]
                [--limit 10] [--files] [--json] [--data <folder>]

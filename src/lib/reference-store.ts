@@ -211,7 +211,7 @@ async function readReference(id: string): Promise<DesignReference | null> {
   } catch (error) {
     // One damaged file should not take the rest of the library down with it.
     console.warn(
-      `Spar: skipping ${path.join(referenceDir(id), RECORD_FILE)}: ${
+      `World Material Library: skipping ${path.join(referenceDir(id), RECORD_FILE)}: ${
         error instanceof Error ? error.message : String(error)
       }`,
     );

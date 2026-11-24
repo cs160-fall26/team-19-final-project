@@ -20,7 +20,7 @@ function failure(error: unknown) {
 }
 
 /**
- * A run spends the owner's Codex allowance, so only Spar's own pages may start
+ * A run spends the owner's Codex allowance, so only the app's own pages may start
  * or stop one. A browser says where a request comes from; a tool on this
  * machine (curl, an agent) sends neither header and is let through.
  */
@@ -55,7 +55,7 @@ export async function GET(_request: Request, { params }: Context) {
  */
 export async function POST(request: Request, { params }: Context) {
   if (fromAnotherSite(request)) {
-    return fail(403, "Deep analysis can only be started from Spar itself.");
+    return fail(403, "Deep analysis can only be started from World Material Library itself.");
   }
   const { id } = await params;
   const body = (await request.json().catch(() => null)) as { note?: unknown } | null;
@@ -76,7 +76,7 @@ export async function POST(request: Request, { params }: Context) {
 /** Stops the run, if one is working. */
 export async function DELETE(request: Request, { params }: Context) {
   if (fromAnotherSite(request)) {
-    return fail(403, "Deep analysis can only be stopped from Spar itself.");
+    return fail(403, "Deep analysis can only be stopped from World Material Library itself.");
   }
   const { id } = await params;
   try {

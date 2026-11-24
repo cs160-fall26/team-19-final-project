@@ -3,7 +3,7 @@ import type { DesignReference } from "@/lib/types";
 // The library lives on disk, behind the server's /api/references routes
 // (src/lib/reference-store.ts), so it does not depend on this browser.
 
-/** Calls a Spar route and returns its JSON, or throws with a sentence for the user. */
+/** Calls one of the app's routes and returns its JSON, or throws with a sentence for the user. */
 export async function call<T>(
   failure: string,
   input: string,
@@ -13,7 +13,7 @@ export async function call<T>(
   try {
     response = await fetch(input, init);
   } catch {
-    throw new Error(`${failure}: the Spar server did not answer.`);
+    throw new Error(`${failure}: the World Material Library server did not answer.`);
   }
   const body = (await response.json().catch(() => null)) as
     | (T & { error?: string })

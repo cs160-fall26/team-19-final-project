@@ -70,10 +70,16 @@ export function DetailView({
   /** A part of the reference's study to show opened. */
   part?: string;
 }) {
-  const { getById, ready, loadError } = useReferences();
+  const { getById, ready, loadError, references } = useReferences();
   const ref = getById(id);
   // The library as it was left: the same search, colour and view.
   const backHref = libraryHref();
+  // Other boxes extracted from the same upload, in the order they were drawn.
+  const siblings = ref?.photoId
+    ? references
+        .filter((r) => r.photoId === ref.photoId && r.id !== ref.id)
+        .sort((a, b) => b.addedAt.localeCompare(a.addedAt))
+    : [];
   const [metaOpen, setMetaOpen] = useState(false);
   const [mapOpen, setMapOpen] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -123,9 +129,9 @@ export function DetailView({
       <header className="grid grid-cols-3 items-center border-b border-black/8 px-4 py-4 md:px-8">
         <Link
           href="/"
-          className="font-[family-name:var(--font-geist-pixel-square)] text-lg tracking-tight text-black transition-opacity hover:opacity-70"
+          className="font-[family-name:var(--font-geist-pixel-square)] text-sm leading-tight tracking-tight text-black transition-opacity hover:opacity-70 md:text-lg"
         >
-          spar
+          world material library
         </Link>
         <p className="text-center font-mono text-[10px] tracking-wide text-black/50">
           Reference
@@ -142,7 +148,7 @@ export function DetailView({
 
       <div className="mx-auto grid w-full max-w-[1400px] flex-1 lg:grid-cols-2">
         <aside className="flex flex-col gap-8 px-5 py-8 md:px-10 md:py-12">
-          <div className="space-y-2 animate-[spar-rise_0.45s_ease_both]">
+          <div className="space-y-2 animate-[wml-rise_0.45s_ease_both]">
             <h1 className="max-w-md text-2xl leading-tight font-medium tracking-tight md:text-3xl">
               {ref.title}
             </h1>
@@ -153,7 +159,18 @@ export function DetailView({
             </p>
           </div>
 
-          <section className="space-y-3 animate-[spar-rise_0.55s_ease_both]">
+          {ref.note ? (
+            <section className="space-y-3 animate-[wml-rise_0.5s_ease_both]">
+              <h2 className="font-mono text-[10px] tracking-[0.14em] text-black/45 uppercase">
+                Your note
+              </h2>
+              <p className="max-w-prose border-l-2 border-[#CCFF00] pl-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap text-black/75">
+                {ref.note}
+              </p>
+            </section>
+          ) : null}
+
+          <section className="space-y-3 animate-[wml-rise_0.55s_ease_both]">
             <h2 className="font-mono text-[10px] tracking-[0.14em] text-black/45 uppercase">
               Semantic
             </h2>
@@ -161,6 +178,41 @@ export function DetailView({
               {ref.semantic}
             </p>
           </section>
+
+          {siblings.length > 0 ? (
+            <section className="space-y-3">
+              <h2 className="font-mono text-[10px] tracking-[0.14em] text-black/45 uppercase">
+                Also from this photo
+              </h2>
+              <ul className="grid gap-2">
+                {siblings.map((s) => (
+                  <li key={s.id}>
+                    <Link
+                      href={`/r/${s.id}`}
+                      className="group flex items-center gap-3 outline-none focus-visible:ring-2 focus-visible:ring-black"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={s.thumbnailUrl ?? s.imageUrl}
+                        alt=""
+                        className="size-10 shrink-0 bg-[#e8e8e8] object-cover"
+                      />
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm group-hover:underline group-hover:underline-offset-4">
+                          {s.title}
+                        </span>
+                        {s.note ? (
+                          <span className="block truncate font-mono text-[10px] text-black/45">
+                            {s.note}
+                          </span>
+                        ) : null}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
 
           <Collapsible open={metaOpen} onOpenChange={setMetaOpen}>
             <CollapsibleTrigger className="flex w-full items-center justify-between border-y border-black py-3 text-left">
@@ -230,7 +282,7 @@ export function DetailView({
             </CollapsibleContent>
           </Collapsible>
 
-          <div className="mt-auto flex flex-wrap items-center gap-3 pt-4 animate-[spar-rise_0.65s_ease_both]">
+          <div className="mt-auto flex flex-wrap items-center gap-3 pt-4 animate-[wml-rise_0.65s_ease_both]">
             <LimeCta onClick={() => void copyPrompt()}>
               {copied ? "Copied" : "Copy Prompt"}
             </LimeCta>
@@ -244,7 +296,7 @@ export function DetailView({
         </aside>
 
         <section className="flex items-center justify-center bg-[#ececec] px-4 py-10 md:px-10 md:py-14">
-          <div className="relative w-full max-w-xl overflow-hidden bg-[#e4e4e4] shadow-none animate-[spar-fade_0.6s_ease_both]">
+          <div className="relative w-full max-w-xl overflow-hidden bg-[#e4e4e4] shadow-none animate-[wml-fade_0.6s_ease_both]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={ref.imageUrl}

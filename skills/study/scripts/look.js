@@ -70,7 +70,7 @@ let sharp;
 try {
   sharp = require("sharp");
 } catch {
-  fail("the `sharp` package is missing. Run this from the Spar repo, or set NODE_PATH to a node_modules folder that has sharp.");
+  fail("the `sharp` package is missing. Run this from the project's folder, or set NODE_PATH to a node_modules folder that has sharp.");
 }
 
 /* ---------- arguments ---------- */
@@ -1309,7 +1309,7 @@ function studyPage(study, loaded, colours, imageName) {
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Study: ${escapeHtml(study.title ?? study.reference ?? "reference")}</title><style>${PAGE_STYLE}</style></head>
 <body><div class="page">
-  <p class="eyebrow">Spar · study${study.reference ? ` · ${escapeHtml(study.reference)}` : ""}</p>
+  <p class="eyebrow">World Material Library · study${study.reference ? ` · ${escapeHtml(study.reference)}` : ""}</p>
   <h1>${escapeHtml(study.title ?? "Study of a reference")}</h1>
   <p class="lede">${escapeHtml(study.kind)}. Gives: ${escapeHtml((study.gives ?? []).join(", ") || "not stated")}.${study.does_not_give?.length ? ` Does not give: ${escapeHtml(study.does_not_give.join(", "))}.` : ""}</p>
   ${study.confirmed ? "" : `<p class="warn">Not confirmed by the owner yet. The choice of parts is the agent's${study.agent ? ` (${escapeHtml(study.agent)})` : ""}.</p>`}

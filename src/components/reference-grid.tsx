@@ -15,7 +15,7 @@ export function ReferenceGrid({ tiles }: { tiles: GridTile[] }) {
       {tiles.map(({ ref, labels }, index) => (
         <li
           key={ref.id}
-          className="animate-[spar-fade_0.5s_ease_forwards] opacity-0"
+          className="animate-[wml-fade_0.5s_ease_forwards] opacity-0"
           style={{ animationDelay: `${Math.min(index, 18) * 28}ms` }}
         >
           <Link
@@ -24,7 +24,7 @@ export function ReferenceGrid({ tiles }: { tiles: GridTile[] }) {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={ref.imageUrl}
+              src={ref.thumbnailUrl ?? ref.imageUrl}
               alt={ref.title}
               className="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
             />

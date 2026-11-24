@@ -1,6 +1,6 @@
-# Spar — Design Reference Capture
+# World Material Library — Design Reference Capture
 
-Spar is a minimal design-reference library. Upload or browse photos, inspect an extracted region, read auto labels and a semantic write-up, open a map of where it was captured, and **Copy Prompt** for any generative AI tool.
+World Material Library is a minimal design-reference library. Upload or browse photos, inspect an extracted region, read auto labels and a semantic write-up, open a map of where it was captured, and **Copy Prompt** for any generative AI tool.
 
 ## Features
 
@@ -60,7 +60,7 @@ A light analysis is what the vision model writes in a few seconds. A deep analys
 
 Choose **Deep** in the upload dialog, or press **Run deep analysis** on a reference's page. You can add a note saying what you like about the image; the agent treats it as the strongest hint about what to extract. The page shows the run while it works and the parts when it has finished. A run takes about three to ten minutes and keeps going if you close the page.
 
-It needs two things on the computer Spar runs on:
+It needs two things on the computer World Material Library runs on:
 
 - the Codex CLI, logged in: `npm install -g @openai/codex`, then `codex login`. Runs use that account's allowance
 - Chrome, which draws the parts' pictures
@@ -77,7 +77,7 @@ What a run sees and does:
 
 - It works on a copy: the photo, and the title, labels, description and box. The photo's position, date, camera and file name are not in that copy. The photo itself goes to OpenAI as part of the Codex session
 - Codex is sandboxed. It can write only inside its working folder and has no network
-- Nothing the agent writes is run by Spar. The app shows the parts' pictures and offers their files as text to copy
+- Nothing the agent writes is run by World Material Library. The app shows the parts' pictures and offers their files as text to copy
 - A study reaches the library only when the run succeeded. The study it replaces is kept in the run's folder
 
 ## Search for agents
@@ -94,7 +94,7 @@ node skills/gallery/find.js --in parts --format svg,html --files --json
 - `--format svg,html,image`: `svg` and `html` are parts with an editable file; `image` is a picture-only part or a reference's photo
 - `--files` adds the text of each part's file and of the function behind it; `--json` prints JSON
 
-The script reads the library from disk, so it works when Spar is not running and inside a sandbox without network. While Spar runs, `/api/library/search?q=quiet+background&in=parts&format=svg` gives the same answer as `--json`. `skills/gallery/SKILL.md` tells an agent how to use what it finds.
+The script reads the library from disk, so it works when World Material Library is not running and inside a sandbox without network. While it runs, `/api/library/search?q=quiet+background&in=parts&format=svg` gives the same answer as `--json`. `skills/gallery/SKILL.md` tells an agent how to use what it finds.
 
 ## Your library on disk
 
@@ -104,7 +104,7 @@ Every reference is a folder holding its photo and its description:
 data/
   references/
     upload-1763500000000/
-      image.jpg        the photo as Spar keeps it (longest edge 1600 px)
+      image.jpg        the photo as the app keeps it (longest edge 1600 px)
       reference.json   title, labels, description, prompt, box, location, metadata
       embedding.json   what search uses to find related references; safe to delete, it is rebuilt
       study.json       after a deep analysis: the parts the agent chose, and why

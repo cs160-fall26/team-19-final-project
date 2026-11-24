@@ -3,6 +3,8 @@ import type { DesignReference } from "@/lib/types";
 // Before the library moved to disk it lived in this browser's IndexedDB.
 // This module only reads that old library, so it can be copied to disk once;
 // it never writes to it or deletes it.
+// Keeps the app's former name: renaming the database would orphan every
+// reference already saved in a user's browser.
 const DB_NAME = "spar";
 const STORE = "references";
 const COPIED_KEY = "spar:browser-library-copied";

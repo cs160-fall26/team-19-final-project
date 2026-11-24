@@ -17,7 +17,7 @@ export function PartGrid({ tiles }: { tiles: PartTile[] }) {
       {tiles.map(({ part, matched }, index) => (
         <li
           key={`${part.reference.id}/${part.id}`}
-          className="animate-[spar-fade_0.5s_ease_forwards] opacity-0"
+          className="animate-[wml-fade_0.5s_ease_forwards] opacity-0"
           style={{ animationDelay: `${Math.min(index, 18) * 28}ms` }}
         >
           <Link

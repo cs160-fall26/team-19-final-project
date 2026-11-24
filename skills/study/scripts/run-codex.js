@@ -10,7 +10,7 @@
  * The reference folder holds image.* and reference.json. The run folder must
  * be outside it; it receives:
  *
- *   job.json                    the status, which the Spar app polls
+ *   job.json                    the status, which the app polls
  *   work/                       the folder the agent works in
  *   transcript.log and others   what the session said and did
  *   previous/<time>/            the study a newer one replaced

@@ -97,7 +97,7 @@
   }
 }
 
-@keyframes spar-fade {
+@keyframes wml-fade {
   from {
     opacity: 0;
   }
@@ -106,7 +106,7 @@
   }
 }
 
-@keyframes spar-rise {
+@keyframes wml-rise {
   from {
     opacity: 0;
     transform: translateY(10px);

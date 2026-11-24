@@ -43,6 +43,12 @@ export type DesignReference = {
   semantic: string;
   prompt: string;
   boundingBox: BoundingBox;
+  /** The designer's optional note on what they wanted from the box. */
+  note?: string;
+  /** Shared by every reference extracted from the same upload. */
+  photoId?: string;
+  /** The boxed region on its own, shown in the library grid. */
+  thumbnailUrl?: string;
   /** Null when the photo carries no GPS position. */
   location: GeoPoint | null;
   /** ISO timestamp from the camera, or null when the file has none. */
