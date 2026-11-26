@@ -1,0 +1,85 @@
+"use client";
+
+import Link from "next/link";
+import { Check } from "lucide-react";
+import type { DesignReference } from "@/lib/types";
+
+export type GridTile = {
+  ref: DesignReference;
+  /** Shown under the photo while searching: why it is here, then what else it is. */
+  labels?: { matched: string[]; other: string[] };
+};
+
+/** When given, tiles toggle a selection instead of opening the reference. */
+export type GridSelection = {
+  selectedIds: string[];
+  onToggle: (id: string) => void;
+};
+
+export function ReferenceGrid({
+  tiles,
+  selection,
+}: {
+  tiles: GridTile[];
+  selection?: GridSelection;
+}) {
+  return (
+    <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 md:gap-3 lg:grid-cols-5 xl:grid-cols-6">
+      {tiles.map(({ ref, labels }, index) => {
+        const isSelected = selection?.selectedIds.includes(ref.id) ?? false;
+        const tileClass = `group relative block aspect-square w-full overflow-hidden bg-[#e8e8e8] outline-none focus-visible:ring-2 focus-visible:ring-black ${isSelected ? "ring-2 ring-black ring-offset-2 ring-offset-[#f4f4f4]" : ""}`;
+        const image = (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={ref.thumbnailUrl ?? ref.imageUrl}
+            alt={ref.title}
+            className={`size-full object-cover transition duration-500 ease-out group-hover:scale-[1.03] ${selection && !isSelected ? "opacity-60" : ""}`}
+          />
+        );
+        return (
+          <li
+            key={ref.id}
+            className="animate-[wml-fade_0.5s_ease_forwards] opacity-0"
+            style={{ animationDelay: `${Math.min(index, 18) * 28}ms` }}
+          >
+            {selection ? (
+              <button
+                type="button"
+                onClick={() => selection.onToggle(ref.id)}
+                aria-pressed={isSelected}
+                className={tileClass}
+              >
+                {image}
+                <span
+                  aria-hidden
+                  className={`absolute top-2 left-2 flex size-6 items-center justify-center rounded-full border ${isSelected ? "border-black bg-[#CCFF00]" : "border-white bg-black/25"}`}
+                >
+                  {isSelected ? (
+                    <Check className="size-3.5" strokeWidth={2.5} />
+                  ) : null}
+                </span>
+              </button>
+            ) : (
+              <Link href={`/r/${ref.id}`} className={tileClass}>
+                {image}
+              </Link>
+            )}
+            {labels ? (
+              <p className="mt-1.5 truncate font-mono text-[10px] leading-4 text-black/40">
+                {labels.matched.length > 0 ? (
+                  <span className="text-black">
+                    {labels.matched.join(" · ")}
+                  </span>
+                ) : null}
+                {labels.matched.length > 0 && labels.other.length > 0
+                  ? " · "
+                  : ""}
+                {labels.other.join(" · ")}
+              </p>
+            ) : null}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}

@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The library on disk. A deep analysis saves files an agent wrote there.
+    "data/**",
   ]),
 ]);
 

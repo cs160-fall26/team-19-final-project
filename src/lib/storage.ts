@@ -1,81 +1,54 @@
-import type { Chat, DesignReference } from "@/lib/types";
+import type { DesignReference } from "@/lib/types";
 
-// IndexedDB rather than localStorage: a handful of real photos exceeds the
-// ~5 MB localStorage quota.
-// Keeps the app's former name: renaming the database would orphan every
-// reference already saved in a user's browser.
-const DB_NAME = "spar";
-// Version 3 adds the chats store. (Version 2's "generations" store is unused.)
-const DB_VERSION = 3;
-const STORE = "references";
-const CHATS = "chats";
+// The library lives on disk, behind the server's /api/references routes
+// (src/lib/reference-store.ts), so it does not depend on this browser.
 
-function openDb(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = window.indexedDB.open(DB_NAME, DB_VERSION);
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains(STORE)) {
-        db.createObjectStore(STORE, { keyPath: "id" });
-      }
-      if (!db.objectStoreNames.contains(CHATS)) {
-        db.createObjectStore(CHATS, { keyPath: "id" });
-      }
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-async function getAll<T>(store: string): Promise<T[]> {
-  const db = await openDb();
+/** Calls one of the app's routes and returns its JSON, or throws with a sentence for the user. */
+export async function call<T>(
+  failure: string,
+  input: string,
+  init?: RequestInit,
+): Promise<T> {
+  let response: Response;
   try {
-    return await new Promise<T[]>((resolve, reject) => {
-      const request = db.transaction(store, "readonly").objectStore(store).getAll();
-      request.onsuccess = () => resolve(request.result as T[]);
-      request.onerror = () => reject(request.error);
-    });
-  } finally {
-    db.close();
+    response = await fetch(input, init);
+  } catch {
+    throw new Error(`${failure}: the World Material Library server did not answer.`);
   }
+  const body = (await response.json().catch(() => null)) as
+    | (T & { error?: string })
+    | null;
+  if (!response.ok || !body || body.error) {
+    throw new Error(body?.error ?? `${failure} (HTTP ${response.status}).`);
+  }
+  return body;
 }
 
-async function write(
-  store: string,
-  change: (objects: IDBObjectStore) => void,
-): Promise<void> {
-  const db = await openDb();
-  try {
-    await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(store, "readwrite");
-      change(tx.objectStore(store));
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error);
-    });
-  } finally {
-    db.close();
-  }
-}
-
+/** The stored library, newest first. */
 export async function loadReferences(): Promise<DesignReference[]> {
-  const refs = await getAll<DesignReference>(STORE);
-  return refs.sort((a, b) => b.addedAt.localeCompare(a.addedAt));
+  const { references } = await call<{ references: DesignReference[] }>(
+    "Could not load the library",
+    "/api/references",
+    { cache: "no-store" },
+  );
+  return references;
 }
 
-export function saveReference(ref: DesignReference): Promise<void> {
-  return write(STORE, (objects) => objects.put(ref));
-}
-
-export async function loadChats(): Promise<Chat[]> {
-  const chats = await getAll<Chat>(CHATS);
-  return chats.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-}
-
-export function saveChat(chat: Chat): Promise<void> {
-  return write(CHATS, (objects) => objects.put(chat));
-}
-
-export function deleteChat(id: string): Promise<void> {
-  return write(CHATS, (objects) => objects.delete(id));
+/**
+ * Stores a reference whose `imageUrl` is the photo as a data URL. The stored
+ * reference that comes back points at the photo's file instead.
+ */
+export async function saveReference(
+  ref: DesignReference,
+): Promise<DesignReference> {
+  const { reference } = await call<{ reference: DesignReference }>(
+    "Could not save the reference",
+    "/api/references",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(ref),
+    },
+  );
+  return reference;
 }

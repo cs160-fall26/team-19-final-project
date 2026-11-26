@@ -81,6 +81,10 @@ export type Chat = {
 export type DesignReference = {
   id: string;
   title: string;
+  /**
+   * Where the photo is served from once the reference is stored. A reference
+   * that is not on disk yet carries the photo itself here, as a data URL.
+   */
   imageUrl: string;
   labels: string[];
   semantic: string;

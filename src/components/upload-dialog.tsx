@@ -23,6 +23,7 @@ import {
   type PhotoFacts,
   type PreparedPhoto,
 } from "@/lib/photo";
+import { startStudy } from "@/lib/study";
 import type { BoundingBox, DesignReference } from "@/lib/types";
 import { X } from "lucide-react";
 
@@ -38,6 +39,22 @@ const NOTE_MAX = 500;
 const isWholePhoto = (box: BoundingBox) =>
   box.x === 0 && box.y === 0 && box.width === 1 && box.height === 1;
 
+/** How much is worked out about a new reference. */
+type Analysis = "light" | "deep";
+
+const ANALYSES: { value: Analysis; title: string; text: string }[] = [
+  {
+    value: "light",
+    title: "Light",
+    text: "A title, labels, a description and a prompt. A few seconds.",
+  },
+  {
+    value: "deep",
+    title: "Deep",
+    text: "The same, then Codex extracts reusable parts as pictures and editable files, guided by the box's note. Several minutes more.",
+  },
+];
+
 export function UploadDialog() {
   const inputRef = useRef<HTMLInputElement>(null);
   const notesRef = useRef<HTMLOListElement>(null);
@@ -49,6 +66,9 @@ export function UploadDialog() {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<"reading" | "extracting" | null>(null);
+  const [analysis, setAnalysis] = useState<Analysis>("light");
+  /** True once this upload has started its deep analysis, so that a retry of failed boxes starts no second one. */
+  const studyStarted = useRef(false);
   const { addReference } = useReferences();
   const router = useRouter();
 
@@ -59,6 +79,7 @@ export function UploadDialog() {
     setNotes({});
     setError(null);
     setBusy(null);
+    studyStarted.current = false;
     if (inputRef.current) inputRef.current.value = "";
   }
 
@@ -165,10 +186,26 @@ export function UploadDialog() {
       r.status === "rejected" ? [r.reason] : [],
     );
 
+    // A deep analysis is a Codex run of several minutes, so one upload starts
+    // one: for the box drawn last, with that box's note as the hint.
+    let studied: DesignReference | null = null;
+    if (analysis === "deep" && !studyStarted.current) {
+      const latest = saved.find((s) => s.boxId === boxes.at(-1)?.id);
+      if (latest) {
+        studyStarted.current = true;
+        // The reference is saved either way. If the run cannot start, the
+        // server records why, and the reference's page shows it and offers
+        // to start again.
+        await startStudy(latest.ref.id, latest.ref.note ?? "").catch(() => undefined);
+        studied = latest.ref;
+      }
+    }
+
     if (failures.length === 0) {
       setOpen(false);
       reset();
-      router.push(`/r/${saved[0].ref.id}`);
+      // Land where the analysis is running, when one was started.
+      router.push(`/r/${(studied ?? saved[0].ref).id}`);
       return;
     }
 
@@ -304,6 +341,44 @@ export function UploadDialog() {
                   </dd>
                 </div>
               </dl>
+
+              {/* One line and a sentence: the dialog is already tall with a photo and its notes. */}
+              <div
+                role="radiogroup"
+                aria-label="Analysis"
+                className="flex flex-wrap items-baseline gap-x-4 gap-y-1 font-mono text-[11px]"
+              >
+                <span className="text-[10px] tracking-[0.14em] text-black/45 uppercase">
+                  Analysis
+                </span>
+                {ANALYSES.map((option) => (
+                  <label
+                    key={option.value}
+                    className={`cursor-pointer underline-offset-4 transition-colors has-focus-visible:underline has-disabled:cursor-default has-disabled:opacity-60 ${
+                      analysis === option.value
+                        ? "text-black underline"
+                        : "text-black/45 hover:text-black"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="analysis"
+                      value={option.value}
+                      checked={analysis === option.value}
+                      disabled={extracting}
+                      onChange={() => setAnalysis(option.value)}
+                      className="sr-only"
+                    />
+                    {option.title}
+                  </label>
+                ))}
+                <span className="basis-full text-[10px] leading-4 text-black/55">
+                  {ANALYSES.find((option) => option.value === analysis)?.text}
+                  {analysis === "deep" && boxes.length > 1 ? (
+                    <span> Codex studies the latest box only: box {boxes.length}.</span>
+                  ) : null}
+                </span>
+              </div>
 
               <div className="flex flex-wrap items-center gap-3">
                 <LimeCta

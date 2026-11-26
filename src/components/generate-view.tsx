@@ -22,6 +22,8 @@ import {
   requestGeneration,
   resolveReference,
   takeStashedReferences,
+  toDataUrl,
+  withEmbeddedImages,
   withReferenceImages,
   withReferenceTokens,
   type GenerationReference,
@@ -151,12 +153,35 @@ export function GenerateView() {
     [messages, pasted],
   );
   const lookup = (id: string) => resolveReference(id, getById, knownPasted);
-  const chatImages = useMemo(
+  // Library images are served from the app's URLs, which a sandboxed design
+  // frame cannot load by relative path. Each is fetched once and embedded;
+  // until then the full address stands in.
+  const sourceImages = useMemo(
     () =>
       chatRefIds.map(
         (id) => resolveReference(id, getById, knownPasted)?.image ?? "",
       ),
     [chatRefIds, getById, knownPasted],
+  );
+  const [embedded, setEmbedded] = useState<Record<string, string>>({});
+  useEffect(() => {
+    for (const src of sourceImages) {
+      if (!src || src.startsWith("data:") || embedded[src]) continue;
+      toDataUrl(src)
+        .then((data) => setEmbedded((prev) => ({ ...prev, [src]: data })))
+        .catch(() => {
+          // The full address keeps working where the frame can reach it.
+        });
+    }
+  }, [sourceImages, embedded]);
+  const chatImages = useMemo(
+    () =>
+      sourceImages.map((src) =>
+        !src || src.startsWith("data:")
+          ? src
+          : (embedded[src] ?? new URL(src, window.location.origin).href),
+      ),
+    [sourceImages, embedded],
   );
   const render = (design: DesignMessage) =>
     withReferenceImages(design.html, chatImages);
@@ -290,25 +315,39 @@ export function GenerateView() {
     // On a revision the model already has the earlier images in the HTML, so
     // only images new in this message are sent: much less to upload and read.
     const seenBefore = new Set(chatReferenceIds({ messages: earlier }));
-    const refs: GenerationReference[] = chatReferenceIds(current).map((id) => {
-      const ref = resolveReference(id, getById, allPasted);
-      if (!ref) {
-        // Keeps later references at their numbers.
-        return { title: "Missing reference", semantic: "", labels: [], palette: [] };
-      }
-      const { image, title, semantic, labels, palette, note } = ref;
-      return {
-        image: previous && seenBefore.has(id) ? undefined : image,
-        title,
-        semantic,
-        labels,
-        palette,
-        note,
-      };
-    });
-
     setBusy(true);
     setError(null);
+    let refs: GenerationReference[];
+    try {
+      refs = await Promise.all(
+        chatReferenceIds(current).map(async (id) => {
+          const ref = resolveReference(id, getById, allPasted);
+          if (!ref) {
+            // Keeps later references at their numbers.
+            return { title: "Missing reference", semantic: "", labels: [], palette: [] };
+          }
+          const { image, title, semantic, labels, palette, note } = ref;
+          const send = !(previous && seenBefore.has(id));
+          return {
+            // Library images are URLs; the model needs the picture itself.
+            image: send ? await toDataUrl(image) : undefined,
+            title,
+            semantic,
+            labels,
+            palette,
+            note,
+          };
+        }),
+      );
+    } catch (cause) {
+      setError(
+        cause instanceof Error && cause.message
+          ? cause.message
+          : "A reference image could not be loaded.",
+      );
+      setBusy(false);
+      return;
+    }
     const revising = Boolean(previous);
     let written = "";
     let lastShown = 0;
@@ -445,18 +484,22 @@ export function GenerateView() {
   async function copyHtml() {
     if (!active) return;
     try {
-      await navigator.clipboard.writeText(render(active));
+      await navigator.clipboard.writeText(
+        await withEmbeddedImages(active.html, chatImages),
+      );
       setCopied(true);
     } catch {
       setCopied(false);
     }
   }
 
-  function download() {
+  async function download() {
     if (!active) return;
-    const url = URL.createObjectURL(
-      new Blob([render(active)], { type: "text/html" }),
+    // Images are embedded so the file works on its own.
+    const html = await withEmbeddedImages(active.html, chatImages).catch(() =>
+      render(active),
     );
+    const url = URL.createObjectURL(new Blob([html], { type: "text/html" }));
     const link = document.createElement("a");
     link.href = url;
     link.download = `generated-${active.id}.html`;
@@ -851,7 +894,7 @@ export function GenerateView() {
                 </button>
                 <button
                   type="button"
-                  onClick={download}
+                  onClick={() => void download()}
                   className="underline underline-offset-4"
                 >
                   Download .html

@@ -198,6 +198,31 @@ export function takeStashedReferences(): string[] {
   }
 }
 
+/**
+ * The model and downloaded pages need images inline. Library images are
+ * served from URLs now that the library lives on disk, so fetch and embed them.
+ */
+export async function toDataUrl(src: string): Promise<string> {
+  if (!src || src.startsWith("data:")) return src;
+  const response = await fetch(src);
+  if (!response.ok) throw new Error("A reference image could not be loaded.");
+  const blob = await response.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("A reference image could not be read."));
+    reader.readAsDataURL(blob);
+  });
+}
+
+/** The design with every reference image embedded, so it stands on its own. */
+export async function withEmbeddedImages(
+  html: string,
+  images: string[],
+): Promise<string> {
+  return withReferenceImages(html, await Promise.all(images.map(toDataUrl)));
+}
+
 /** The reverse of withReferenceImages, so saved HTML stays small. */
 export function withReferenceTokens(html: string, images: string[]): string {
   let out = html;
