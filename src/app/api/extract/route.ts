@@ -15,7 +15,7 @@ Report what is visible. Do not guess the place, the maker, the brand or the date
 const RESPONSE_SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["title", "labels", "semantic", "prompt"],
+  required: ["title", "labels", "semantic", "prompt", "in_photo"],
   properties: {
     title: {
       type: "string",
@@ -31,6 +31,12 @@ const RESPONSE_SCHEMA = {
       type: "string",
       description:
         "2 to 4 sentences on form, material, colour, texture, light and what makes the element distinctive as a design reference.",
+    },
+    in_photo: {
+      type: "array",
+      description:
+        "5 to 10 lowercase nouns for the main things visible anywhere in the whole photograph, inside or outside the box: creatures, people, objects, materials and the setting. Used only so the photo can be found by everything in it.",
+      items: { type: "string" },
     },
     prompt: {
       type: "string",
@@ -188,9 +194,17 @@ export async function POST(request: Request) {
     return fail(502, `OpenRouter (${model}) returned an incomplete description.`);
   }
 
+  const rawInPhoto = (parsed as { in_photo?: unknown }).in_photo;
+  const inPhoto = Array.isArray(rawInPhoto)
+    ? rawInPhoto
+        .filter((item): item is string => typeof item === "string")
+        .map((item) => item.trim().toLowerCase())
+        .filter(Boolean)
+    : [];
   const result: VisionExtraction = {
     title: parsed.title.trim(),
     labels: Array.from(new Set(labels)),
+    inPhoto: Array.from(new Set(inPhoto)).slice(0, 12),
     semantic: parsed.semantic.trim(),
     prompt: parsed.prompt.trim(),
     model: payload?.model ?? model,

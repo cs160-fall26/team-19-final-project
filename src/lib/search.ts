@@ -12,23 +12,28 @@ import type { DesignReference } from "@/lib/types";
  *
  * The parts of a deep analysis are searched by the same rules: anything with
  * labels, a title and some text can be (see part-search.ts).
+ *
+ * What else is in the photo (inPhoto) counts least: a photo that only shows
+ * a fish somewhere still turns up for "fish", after the references about one.
  */
 
 /** What the search reads of a thing. A reference has all of it. */
 export type Searchable = Pick<
   DesignReference,
   "title" | "labels" | "semantic" | "prompt" | "addedAt" | "note"
->;
+> &
+  Partial<Pick<DesignReference, "inPhoto">>;
 
-type Field = "label" | "title" | "text";
+type Field = "label" | "title" | "text" | "photo";
 type Kind = "exact" | "prefix" | "typo";
 
 const WEIGHTS: Record<Field, Partial<Record<Kind, number>>> = {
   label: { exact: 10, prefix: 7, typo: 4 },
   title: { exact: 6, prefix: 4, typo: 3 },
   text: { exact: 3, prefix: 2 },
+  photo: { exact: 2, prefix: 1 },
 };
-const FIELDS: Field[] = ["label", "title", "text"];
+const FIELDS: Field[] = ["label", "title", "text", "photo"];
 /** Added when the whole query is one of the reference's labels. */
 const WHOLE_LABEL_BONUS = 5;
 
@@ -102,7 +107,7 @@ function entryFor(ref: Searchable): Entry {
 
   entry = {
     labels: ref.labels.map((label) => wordsOf(label).join(" ")),
-    words: { label: new Set(), title: new Set(), text: new Set() },
+    words: { label: new Set(), title: new Set(), text: new Set(), photo: new Set() },
     labelsByWord: new Map(),
   };
   for (const label of ref.labels) {
@@ -123,6 +128,7 @@ function entryFor(ref: Searchable): Entry {
   addWords(entry.words.text, ref.semantic);
   addWords(entry.words.text, ref.prompt);
   if (ref.note) addWords(entry.words.text, ref.note);
+  for (const thing of ref.inPhoto ?? []) addWords(entry.words.photo, thing);
   entries.set(ref, entry);
   return entry;
 }

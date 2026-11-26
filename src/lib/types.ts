@@ -96,6 +96,12 @@ export type DesignReference = {
   photoId?: string;
   /** The boxed region on its own, shown in the library grid. */
   thumbnailUrl?: string;
+  /**
+   * The main things visible anywhere in the photo, inside the box or not, so
+   * a search finds the photo by everything in it. Absent on references saved
+   * before it existed (scripts/backfill-in-photo.mjs fills those in).
+   */
+  inPhoto?: string[];
   /** Null when the photo carries no GPS position. */
   location: GeoPoint | null;
   /** ISO timestamp from the camera, or null when the file has none. */

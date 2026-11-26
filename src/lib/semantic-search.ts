@@ -129,7 +129,10 @@ async function embed(texts: string[], model: string): Promise<Float32Array[]> {
 
 /** What the model reads for a reference. */
 function referenceText(ref: DesignReference): string {
-  return `${ref.title}\nLabels: ${ref.labels.join(", ")}\n${ref.semantic}`;
+  const inPhoto = ref.inPhoto?.length
+    ? `\nAlso in the photo: ${ref.inPhoto.join(", ")}`
+    : "";
+  return `${ref.title}\nLabels: ${ref.labels.join(", ")}\n${ref.semantic}${inPhoto}`;
 }
 
 function fingerprint(text: string): string {

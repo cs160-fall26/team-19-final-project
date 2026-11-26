@@ -170,6 +170,9 @@ function parseFields(value: unknown): StoredReference {
     id,
     title: text(input.title, "title"),
     labels: textList(input.labels, "labels"),
+    ...(input.inPhoto === undefined || input.inPhoto === null
+      ? {}
+      : { inPhoto: textList(input.inPhoto, "inPhoto").slice(0, 24) }),
     semantic: text(input.semantic, "semantic"),
     prompt: text(input.prompt, "prompt"),
     boundingBox: {

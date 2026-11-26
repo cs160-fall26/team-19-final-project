@@ -164,6 +164,7 @@ export function UploadDialog() {
           imageUrl: photo.dataUrl,
           thumbnailUrl: crop,
           labels: extracted.labels,
+          inPhoto: extracted.inPhoto,
           semantic: extracted.semantic,
           prompt: extracted.prompt,
           boundingBox: box,

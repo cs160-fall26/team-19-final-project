@@ -6,6 +6,8 @@ export type VisionExtraction = {
   labels: string[];
   semantic: string;
   prompt: string;
+  /** The main things visible anywhere in the whole photo. */
+  inPhoto: string[];
   model: string;
 };
 
