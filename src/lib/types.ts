@@ -31,6 +31,53 @@ export type ImageMetadata = {
   palette: string[];
 };
 
+/** An image pasted or dropped into the generation chat. */
+export type PastedImage = {
+  id: string;
+  /** Downscaled JPEG data URL. */
+  dataUrl: string;
+  name?: string;
+};
+
+/** Something the designer said, with the references they attached to it. */
+export type UserMessage = {
+  id: string;
+  role: "user";
+  text: string;
+  /** References attached with this message: library ids and pasted image ids. */
+  referenceIds: string[];
+  /** Images pasted into this message; their ids also appear in referenceIds. */
+  pastedImages?: PastedImage[];
+  createdAt: string;
+};
+
+/** A design the model made in reply. */
+export type DesignMessage = {
+  id: string;
+  role: "assistant";
+  /**
+   * A complete HTML document. It may contain referenceImageToken(n) where the
+   * chat's nth reference (see chatReferenceIds) should appear; the app swaps
+   * in the image when shown.
+   */
+  html: string;
+  model: string;
+  /** True when the designer made this version by hand in Edit mode. */
+  editedByHand?: boolean;
+  createdAt: string;
+};
+
+export type ChatMessage = UserMessage | DesignMessage;
+
+/** A generation conversation: each reply revises the design before it. */
+export type Chat = {
+  id: string;
+  title: string;
+  messages: ChatMessage[];
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type DesignReference = {
   id: string;
   title: string;

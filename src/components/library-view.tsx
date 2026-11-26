@@ -1,16 +1,44 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Check } from "lucide-react";
+import { AppNav } from "@/components/app-nav";
+import { LimeCta } from "@/components/lime-cta";
 import { useReferences } from "@/components/references-provider";
 import { UploadDialog } from "@/components/upload-dialog";
+import { stashReferencesForGenerate } from "@/lib/generation";
 
 export function LibraryView() {
   const { references, ready } = useReferences();
+  const router = useRouter();
+  const [selecting, setSelecting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const count = references.length;
+
+  function toggle(id: string) {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
+
+  function stopSelecting() {
+    setSelecting(false);
+    setSelectedIds([]);
+  }
+
+  function generateWithSelection() {
+    stashReferencesForGenerate(selectedIds);
+    router.push("/generate");
+  }
 
   return (
     <div className="relative flex min-h-full flex-1 flex-col bg-[#f4f4f4]">
-      <header className="px-4 pt-10 pb-8 text-center md:px-8">
+      <header className="px-4 pt-8 pb-8 text-center md:px-8">
+        <div className="mb-7 flex justify-center">
+          <AppNav active="library" />
+        </div>
         <p className="font-mono text-[11px] leading-relaxed tracking-[0.02em] text-black/80 md:text-xs">
           World Material Library — Design Reference Capture
           <br />
@@ -19,6 +47,18 @@ export function LibraryView() {
           {ready
             ? `${count} ${count === 1 ? "reference" : "references"}`
             : "Loading…"}
+          {ready && count > 0 ? (
+            <>
+              {" · "}
+              <button
+                type="button"
+                onClick={() => (selecting ? stopSelecting() : setSelecting(true))}
+                className="underline underline-offset-4 hover:text-black"
+              >
+                {selecting ? "Cancel selection" : "Select to generate"}
+              </button>
+            </>
+          ) : null}
         </p>
       </header>
 
@@ -38,25 +78,52 @@ export function LibraryView() {
           </p>
         ) : (
           <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:gap-3">
-            {references.map((ref, index) => (
-              <li
-                key={ref.id}
-                className="opacity-0 animate-[wml-fade_0.5s_ease_forwards]"
-                style={{ animationDelay: `${Math.min(index, 18) * 28}ms` }}
-              >
-                <Link
-                  href={`/r/${ref.id}`}
-                  className="group block aspect-square overflow-hidden bg-[#e8e8e8] outline-none focus-visible:ring-2 focus-visible:ring-black"
-                >
+            {references.map((ref, index) => {
+              const isSelected = selectedIds.includes(ref.id);
+              const tile = (
+                <>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={ref.thumbnailUrl ?? ref.imageUrl}
                     alt={ref.title}
-                    className="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                    className={`size-full object-cover transition duration-500 ease-out group-hover:scale-[1.03] ${selecting && !isSelected ? "opacity-60" : ""}`}
                   />
-                </Link>
-              </li>
-            ))}
+                  {selecting ? (
+                    <span
+                      aria-hidden
+                      className={`absolute top-2 left-2 flex size-6 items-center justify-center rounded-full border ${isSelected ? "border-black bg-[#CCFF00]" : "border-white bg-black/25"}`}
+                    >
+                      {isSelected ? (
+                        <Check className="size-3.5" strokeWidth={2.5} />
+                      ) : null}
+                    </span>
+                  ) : null}
+                </>
+              );
+              const tileClass = `group relative block aspect-square w-full overflow-hidden bg-[#e8e8e8] outline-none focus-visible:ring-2 focus-visible:ring-black ${isSelected ? "ring-2 ring-black ring-offset-2 ring-offset-[#f4f4f4]" : ""}`;
+              return (
+                <li
+                  key={ref.id}
+                  className="relative opacity-0 animate-[wml-fade_0.5s_ease_forwards]"
+                  style={{ animationDelay: `${Math.min(index, 18) * 28}ms` }}
+                >
+                  {selecting ? (
+                    <button
+                      type="button"
+                      onClick={() => toggle(ref.id)}
+                      aria-pressed={isSelected}
+                      className={tileClass}
+                    >
+                      {tile}
+                    </button>
+                  ) : (
+                    <Link href={`/r/${ref.id}`} className={tileClass}>
+                      {tile}
+                    </Link>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
 
@@ -79,7 +146,34 @@ export function LibraryView() {
         </div>
       </footer>
 
-      <UploadDialog />
+      {selecting ? (
+        <div className="fixed inset-x-0 bottom-5 z-40 flex justify-center px-4 md:bottom-8">
+          <div className="flex items-center gap-4 rounded-full border border-black/10 bg-white py-1.5 pr-1.5 pl-5 shadow-sm">
+            <span className="font-mono text-[11px] tracking-wide">
+              {selectedIds.length === 0
+                ? "Pick references"
+                : `${selectedIds.length} selected`}
+            </span>
+            {selectedIds.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => setSelectedIds([])}
+                className="font-mono text-[11px] text-black/55 underline underline-offset-4 hover:text-black"
+              >
+                Clear
+              </button>
+            ) : null}
+            <LimeCta
+              onClick={generateWithSelection}
+              disabled={selectedIds.length === 0}
+            >
+              Generate
+            </LimeCta>
+          </div>
+        </div>
+      ) : (
+        <UploadDialog />
+      )}
     </div>
   );
 }
